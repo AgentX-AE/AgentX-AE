@@ -13,7 +13,6 @@ It provides:
 - Simulation of heterogeneous model pools approaching **1 TB+** capacity.
 - Architectural evaluation of PIM/NDP-enabled memory hierarchies.
 - Comparisons against GPU baselines (H100, multi-GPU, CPU-offload, etc.).
-- Reproducible scripts for all figures and tables in the paper.
 
 The code is released to support artifact evaluation (AE) and enable reproducibility.
 
