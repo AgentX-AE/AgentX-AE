@@ -1,0 +1,24 @@
+add_library(AgentX-controller OBJECT)
+
+target_sources(
+  AgentX-controller PRIVATE
+  controller.h 
+  scheduler.h 
+  plugin.h
+  refresh.h
+
+  impl/AgentX_NDP_controller.cpp
+  
+  impl/scheduler/NDP_scheduler.cpp
+
+  impl/refresh/AgentX_All_Bank_refresh.cpp
+  impl/refresh/no_refresh.cpp
+
+  impl/plugin/AgentX_Trace_Recorder.cpp
+)
+
+target_link_libraries(
+  AgentX
+  PRIVATE
+  AgentX-controller
+)

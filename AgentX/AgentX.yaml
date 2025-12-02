@@ -1,0 +1,35 @@
+Frontend:
+  impl: NDPLoadStoreTrace
+  path: ./AgentX-NDP.trace
+  clock_ratio: 1
+
+  Translation:
+    impl: NoTranslation
+    max_addr: 2147483648
+              
+
+MemorySystem:
+  impl: AgentX-NDP
+  clock_ratio: 1
+  DRAM:
+    impl: AgentX-NDP
+    org:
+      preset: LPDDR5_32Gb_x16
+      channel_width: 16
+      channel: 8
+    timing:
+      preset: LPDDR5_6400
+
+  Controller:
+    impl: AgentX-NDP
+    Scheduler:
+      impl: NDP
+    RefreshManager:
+      impl: AgentXAllBank
+    plugins:
+    - ControllerPlugin:
+        impl: AgentXTraceRecorder
+        path: ./log/AgentX-NDP/cmd.log
+
+  AddrMapper:
+    impl: AgentX-NDP

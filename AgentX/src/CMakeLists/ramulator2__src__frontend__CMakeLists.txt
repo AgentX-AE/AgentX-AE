@@ -1,0 +1,14 @@
+add_library(AgentX-frontend OBJECT)
+
+target_sources(
+  AgentX-frontend PRIVATE
+  frontend.h
+
+  impl/memory_trace/NDP_loadstore_trace.cpp
+)
+
+target_link_libraries(
+  AgentX
+  PRIVATE
+  AgentX-frontend
+)

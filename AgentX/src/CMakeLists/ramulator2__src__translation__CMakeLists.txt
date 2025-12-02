@@ -1,0 +1,15 @@
+add_library(AgentX-translation OBJECT)
+
+target_sources(
+  AgentX-translation PRIVATE
+  translation.h
+
+  impl/no_translation.cpp
+  impl/random_translation.cpp
+)
+
+target_link_libraries(
+  AgentX
+  PRIVATE
+  AgentX-translation
+)

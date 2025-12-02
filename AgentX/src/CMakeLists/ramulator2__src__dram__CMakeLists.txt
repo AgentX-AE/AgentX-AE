@@ -1,0 +1,16 @@
+add_library(AgentX-dram OBJECT)
+
+target_sources(
+  AgentX-dram PRIVATE
+  dram.h  node.h  spec.h  lambdas.h  
+  
+  lambdas/preq.h  lambdas/rowhit.h  lambdas/rowopen.h 
+
+  impl/AgentXNDP.cpp
+)
+
+target_link_libraries(
+  AgentX
+  PRIVATE
+  AgentX-dram
+)

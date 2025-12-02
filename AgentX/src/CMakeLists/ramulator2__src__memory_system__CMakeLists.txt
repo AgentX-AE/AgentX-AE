@@ -1,0 +1,14 @@
+add_library(AgentX-memorysystem OBJECT)
+
+target_sources(
+  AgentX-memorysystem PRIVATE
+  memory_system.h
+
+  impl/AgentX_NDP_system.cpp
+)
+
+target_link_libraries(
+  AgentX
+  PRIVATE
+  AgentX-memorysystem
+)
