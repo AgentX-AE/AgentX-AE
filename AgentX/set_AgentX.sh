@@ -3,9 +3,7 @@ set -e
 
 cd "$(dirname "$0")"
 
-git clone https://github.com/CMU-SAFARI/ramulator2.git
 cd ramulator2
-git checkout 0eafaa4
 
 cp -f ../src/main.cpp                       src/
 cp -f ../src/base.h                         src/base/
