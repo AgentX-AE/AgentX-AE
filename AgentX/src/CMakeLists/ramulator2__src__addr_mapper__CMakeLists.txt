@@ -4,7 +4,7 @@ target_sources(
   AgentX-addrmapper PRIVATE
   addr_mapper.h 
 
-  impl/AgenX_NDP_linear_mappers.cpp
+  impl/AgentX_NDP_linear_mappers.cpp
 )
 
 target_link_libraries(
