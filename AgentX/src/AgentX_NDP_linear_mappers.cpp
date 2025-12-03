@@ -7,7 +7,7 @@
 
 namespace Ramulator {
 
-class LinearPIMMapperBase : public IAddrMapper {
+class LinearMapperBase : public IAddrMapper {
   public:
     IDRAM* m_dram = nullptr;
 
@@ -51,14 +51,14 @@ class LinearPIMMapperBase : public IAddrMapper {
 };
 
 
-class ChRaBaRoCo final : public LinearPIMMapperBase, public Implementation {
-  RAMULATOR_REGISTER_IMPLEMENTATION(IAddrMapper, ChRaBaRoCo, "AgentX-NDP", "Applies a trival mapping to the address.");
+class AgentXMapper final : public LinearMapperBase, public Implementation {
+  RAMULATOR_REGISTER_IMPLEMENTATION(IAddrMapper, AgentXMapper, "AgentX-NDP", "Applies a trival mapping to the address.");
 
   public:
     void init() override { };
 
     void setup(IFrontEnd* frontend, IMemorySystem* memory_system) override {
-      LinearPIMMapperBase::setup(frontend, memory_system);
+      LinearMapperBase::setup(frontend, memory_system);
     }
 
     void apply(Request& req) override {
@@ -70,28 +70,6 @@ class ChRaBaRoCo final : public LinearPIMMapperBase, public Implementation {
       req.addr_vec[2] = slice_lower_bits(addr, m_addr_bits[2]); // BG
       req.addr_vec[1] = slice_lower_bits(addr, m_addr_bits[1]); // Ra
       req.addr_vec[0] = slice_lower_bits(addr, m_addr_bits[0]); // Ch
-    }
-};
-
-
-class RoBaRaCoCh final : public LinearPIMMapperBase, public Implementation {
-  RAMULATOR_REGISTER_IMPLEMENTATION(IAddrMapper, RoBaRaCoCh, "AgentX-NDP-Custom", "Applies a RoBaRaCoCh mapping to the address.");
-
-  public:
-    void init() override { };
-
-    void setup(IFrontEnd* frontend, IMemorySystem* memory_system) override {
-      LinearPIMMapperBase::setup(frontend, memory_system);
-    }
-
-    void apply(Request& req) override {
-      req.addr_vec.resize(m_num_levels, -1);
-      Addr_t addr = req.addr >> m_tx_offset;
-      req.addr_vec[0] = slice_lower_bits(addr, m_addr_bits[0]);
-      req.addr_vec[m_addr_bits.size() - 1] = slice_lower_bits(addr, m_addr_bits[m_addr_bits.size() - 1]);
-      for (int i = 1; i <= m_row_bits_idx; i++) {
-        req.addr_vec[i] = slice_lower_bits(addr, m_addr_bits[i]);
-      }
     }
 };
 

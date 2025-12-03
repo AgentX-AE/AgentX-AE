@@ -1,0 +1,4 @@
+vllm==0.11.0
+pandas==2.3.3
+torch==2.8.0
+transformers==4.57.1

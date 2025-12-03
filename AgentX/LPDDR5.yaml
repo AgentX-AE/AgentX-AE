@@ -1,6 +1,6 @@
 Frontend:
-  impl: NDPLoadStoreTrace
-  path: ./AgentX-NDP.trace
+  impl: LPDDR5Trace
+  path: ./LPDDR5.trace
   clock_ratio: 1
 
   Translation:
@@ -9,27 +9,27 @@ Frontend:
               
 
 MemorySystem:
-  impl: AgentX-NDP
+  impl: LPDDR5
   clock_ratio: 1
   DRAM:
-    impl: AgentX-NDP
+    impl: LPDDR5
     org:
-      preset: AgentX_32Gb_x16
+      preset: LPDDR5_32Gb_x16
       channel_width: 16
       channel: 8
     timing:
-      preset: AgentX_6400
+      preset: LPDDR5_6400
 
   Controller:
-    impl: AgentX-NDP
+    impl: LPDDR5Controller
     Scheduler:
-      impl: NDP
+      impl: LPDDR5
     RefreshManager:
-      impl: AgentXAllBank
+      impl: LPDDR5AllBank
     plugins:
     - ControllerPlugin:
-        impl: AgentXTraceRecorder
-        path: ./log/AgentX-NDP/cmd.log
+        impl: TraceRecorder
+        path: ./log/LPDDR5/cmd.log
 
   AddrMapper:
-    impl: AgentX-NDP
+    impl: LPDDR5

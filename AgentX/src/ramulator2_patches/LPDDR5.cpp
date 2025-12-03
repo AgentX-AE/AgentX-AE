@@ -3,29 +3,29 @@
 
 namespace Ramulator {
 
-class AgentXNDP : public IDRAM, public Implementation {
-  RAMULATOR_REGISTER_IMPLEMENTATION(IDRAM, AgentXNDP, "AgentX-NDP", "AgentX-NDP Device Model")
+class LPDDR5 : public IDRAM, public Implementation {
+  RAMULATOR_REGISTER_IMPLEMENTATION(IDRAM, LPDDR5, "LPDDR5", "LPDDR5 Device Model")
 
   public:
     inline static const std::map<std::string, Organization> org_presets = {
       //   name           density   DQ   Ch Ra Bg Ba   Ro     Co
-      {"AgentX_2Gb_x16",  {2<<10,   16, {1, 1, 4, 4, 1<<13, 1<<6}}},
-      {"AgentX_4Gb_x16",  {4<<10,   16, {1, 1, 4, 4, 1<<14, 1<<6}}},
-      {"AgentX_8Gb_x16",  {8<<10,   16, {1, 1, 4, 4, 1<<15, 1<<6}}},
-      {"AgentX_16Gb_x16", {16<<10,  16, {1, 1, 4, 4, 1<<16, 1<<6}}},
-      {"AgentX_32Gb_x16", {32<<10,  16, {1, 1, 4, 4, 1<<17, 1<<6}}},
+      {"LPDDR5_2Gb_x16",  {2<<10,   16, {1, 1, 4, 4, 1<<13, 1<<6}}},
+      {"LPDDR5_4Gb_x16",  {4<<10,   16, {1, 1, 4, 4, 1<<14, 1<<6}}},
+      {"LPDDR5_8Gb_x16",  {8<<10,   16, {1, 1, 4, 4, 1<<15, 1<<6}}},
+      {"LPDDR5_16Gb_x16", {16<<10,  16, {1, 1, 4, 4, 1<<16, 1<<6}}},
+      {"LPDDR5_32Gb_x16", {32<<10,  16, {1, 1, 4, 4, 1<<17, 1<<6}}},
     };
 
     inline static const std::map<std::string, std::vector<int>> timing_presets = {
-      //   name         rate   nBL  nCL  nRCD  nRPab  nRPpb   nRAS  nRC   nWR  nRTP nCWL nCCD  nCCDAB nRRD  nRRDAB  nWTRS nWTRL nFAW  nPPD  nRFCab nRFCpb nREFI nPBR2PBR nPBR2ACT nCS,  tCK_ps
-      {"AgentX_6400",  {6400,  4,   20,   15,    17,   15,     34,   30,   28,   4,  11,   4,    6,    4,     6,      5,    10,   16,  2,   -1,      -1,   -1,   -1,        -1,    2,   1250}},
+      //   name         rate   nBL  nCL  nRCD  nRPab  nRPpb   nRAS  nRC   nWR  nRTP nCWL nCCD nRRD nWTRS nWTRL nFAW  nPPD  nRFCab nRFCpb nREFI nPBR2PBR nPBR2ACT nCS,  tCK_ps
+      {"LPDDR5_6400",  {6400,  4,   20,   15,    17,   15,     34,   30,   28,   4,  11,   4,   4,   5,    10,   16,  2,   -1,      -1,   -1,   -1,        -1,    2,   1250}},
     };
-    // nCCDAB/nRRDAB is minimum delay between consecutive MACAB/WRAB considering power constraint.
+
 
   /************************************************
    *                Organization
    ***********************************************/   
-    const int m_internal_prefetch_size = 16;
+    const int m_internal_prefetch_size = 16; // 16n prefetch
 
     inline static constexpr ImplDef m_levels = {
       "channel", "rank", "bankgroup", "bank", "row", "column",    
@@ -42,8 +42,6 @@ class AgentXNDP : public IDRAM, public Implementation {
       "RD16",   "WR16",   "RD16A",   "WR16A",
       "REFab",  "REFpb",
       "RFMab",  "RFMpb",
-      //PIM commands
-      "ACTAB","MACAB","WRAB","BARRIER"
     };
 
     inline static const ImplLUT m_command_scopes = LUT (
@@ -54,8 +52,6 @@ class AgentXNDP : public IDRAM, public Implementation {
         {"RD16",  "column"}, {"WR16",   "column"}, {"RD16A", "column"}, {"WR16A", "column"},
         {"REFab", "rank"},   {"REFpb",  "rank"},
         {"RFMab", "rank"},   {"RFMpb",  "rank"},
-        //PIM commands
-        {"ACTAB","row"}, {"MACAB","column"}, {"WRAB","column"}, {"BARRIER","rank"}
       }
     );
 
@@ -76,27 +72,18 @@ class AgentXNDP : public IDRAM, public Implementation {
         {"REFpb",  {false,  false,   false,   true }},
         {"RFMab",  {false,  false,   false,   true }},
         {"RFMpb",  {false,  false,   false,   true }},
-        //PIM commands
-        {"ACTAB",  {true,   false,   false,   false}},
-        {"MACAB",  {false,  false,   true,    false}},
-        {"WRAB",   {false,  false,   true,    false}},
-        {"BARRIER",{false,  false,   false,   false}}
       }
     );
 
     inline static constexpr ImplDef m_requests = {
       "read16", "write16",
-      "all-bank-refresh", "per-bank-refresh",
-      //PIM request
-      "pim-mac-all-bank","pim-write-all-bank","pim-barrier"
+      "all-bank-refresh", "per-bank-refresh"
     };
 
     inline static const ImplLUT m_request_translations = LUT (
       m_requests, m_commands, {
         {"read16", "RD16"}, {"write16", "WR16"}, 
         {"all-bank-refresh", "REFab"}, {"per-bank-refresh", "REFpb"},
-        //PIM request
-        {"pim-mac-all-bank","MACAB"}, {"pim-write-all-bank","WRAB"}, {"pim-barrier","BARRIER"}
       }
     );
 
@@ -108,9 +95,7 @@ class AgentXNDP : public IDRAM, public Implementation {
       "rate", 
       "nBL16", "nCL", "nRCD", "nRPab", "nRPpb", "nRAS", "nRC", "nWR", "nRTP", "nCWL",
       "nCCD",
-      "nCCDAB",
       "nRRD",
-      "nRRDAB",
       "nWTRS", "nWTRL",
       "nFAW",
       "nPPD",
@@ -141,10 +126,10 @@ class AgentXNDP : public IDRAM, public Implementation {
     );
 
   public:
-    struct Node : public DRAMNodeBase<AgentXNDP> {
+    struct Node : public DRAMNodeBase<LPDDR5> {
       Clk_t m_final_synced_cycle = -1; // Extra CAS Sync command needed for RD/WR after this cycle
 
-      Node(AgentXNDP* dram, Node* parent, int level, int id) : DRAMNodeBase<AgentXNDP>(dram, parent, level, id) {};
+      Node(LPDDR5* dram, Node* parent, int level, int id) : DRAMNodeBase<LPDDR5>(dram, parent, level, id) {};
     };
     std::vector<Node*> m_channels;
     
@@ -288,24 +273,24 @@ class AgentXNDP : public IDRAM, public Implementation {
       // Refresh timings
       // tRFC table (unit is nanosecond!)
       constexpr int tRFCab_TABLE[5] = {
-      //  2Gb   4Gb   8Gb  16Gb   32Gb
-          130,  180,  210,  280,  380,
-      };
-
-      constexpr int tRFCpb_TABLE[5] = {
-      //  2Gb   4Gb   8Gb  16Gb  32Gb
-          60,   90,   120,  140, 190
-      };
-
-      constexpr int tPBR2PBR_TABLE[5] = {
-      //  2Gb   4Gb   8Gb  16Gb  32Gb
-          60,   90,   90,  90,   90
-      };
-
-      constexpr int tPBR2ACT_TABLE[5] = {
-      //  2Gb   4Gb   8Gb  16Gb  32Gb
-          8,    8,    8,   8,    8
-      };
+        //  2Gb   4Gb   8Gb  16Gb   32Gb
+            130,  180,  210,  280,  380,
+        };
+  
+        constexpr int tRFCpb_TABLE[5] = {
+        //  2Gb   4Gb   8Gb  16Gb  32Gb
+            60,   90,   120,  140, 190
+        };
+  
+        constexpr int tPBR2PBR_TABLE[5] = {
+        //  2Gb   4Gb   8Gb  16Gb  32Gb
+            60,   90,   90,  90,   90
+        };
+  
+        constexpr int tPBR2ACT_TABLE[5] = {
+        //  2Gb   4Gb   8Gb  16Gb  32Gb
+            8,    8,    8,   8,    8
+        };
 
       // tREFI(base) table (unit is nanosecond!)
       constexpr int tREFI_BASE = 3906;
@@ -353,73 +338,6 @@ class AgentXNDP : public IDRAM, public Implementation {
       // Populate the timing constraints
       #define V(timing) (m_timing_vals(timing))
       populate_timingcons(this, {
-          /////////////////////////////
-          ////--  AgentXNDP PIM MAC  --//
-          /////////////////////////////
-
-          // 1) ACTAB：2-cycle ACT
-          {.level = "channel",
-            .preceding = {"ACTAB"},
-            .following = {"ACTAB", "ACT-1", "PRE", "PREA", "REFab", "REFpb"},
-            .latency = 2},
-          
-          // 2) MACAB/WRAB
-          {.level = "channel",
-            .preceding = {"MACAB"},
-            .following = {"MACAB"},
-            .latency  = V("nCCDAB")},
-          {.level = "channel",
-            .preceding = {"WRAB"},
-            .following = {"WRAB"},
-            .latency  = V("nCCDAB")},
-          
-          // 3) ACTAB ↔ MACAB/WRAB ↔ PREA：RAS/CAS 
-          {.level = "channel",
-            .preceding = {"ACTAB"},
-            .following = {"ACTAB"},
-            .latency  = V("nRC")},
-          
-          {.level = "channel",
-            .preceding = {"ACTAB"},
-            .following = {"MACAB", "WRAB"},
-            .latency  = V("nRCD")},
-          
-          {.level = "channel",
-            .preceding = {"ACTAB"},
-            .following = {"PREA"},
-            .latency  = V("nRAS")},
-          
-          {.level = "channel",
-            .preceding = {"MACAB"},
-            .following = {"PREA"},
-            .latency  = V("nRTP")},
-          
-          {.level = "channel",
-            .preceding = {"WRAB"},
-            .following = {"PREA"},
-            .latency  = V("nCWL") + V("nBL16") + V("nWR")},
-          
-          {.level = "channel",
-            .preceding = {"PREA"},
-            .following = {"ACTAB"},
-            .latency  = V("nRPab")},
-          
-          // 4) RAS <-> REF
-          {.level = "rank",
-            .preceding   = {"ACTAB"},
-            .following   = {"REFab"},
-            .latency     = V("nRC")},
-          
-          {.level = "rank",
-            .preceding   = {"PREA"},
-            .following   = {"REFab"},
-            .latency     = V("nRPab")},
-          
-          {.level = "rank",
-            .preceding   = {"REFab"},
-            .following   = {"ACTAB"},
-            .latency     = V("nRFCab")},
- 
           /*** Channel ***/ 
           // CAS <-> CAS
           /// Data bus occupancy
@@ -452,7 +370,7 @@ class AgentXNDP : public IDRAM, public Implementation {
           {.level = "rank", .preceding = {"RD16A"}, .following = {"REFab"}, .latency = V("nRPpb") + V("nRTP")},          
           {.level = "rank", .preceding = {"WR16A"}, .following = {"REFab"}, .latency = V("nCWL") + V("nBL16") + V("nWR") + V("nRPpb")},          
           {.level = "rank", .preceding = {"REFab"}, .following = {"REFab", "ACT-1", "REFpb"}, .latency = V("nRFCab")},          
-          {.level = "rank", .preceding = {"REFpb"},   .following = {"ACT-1"}, .latency = V("nPBR2ACT")},  
+          {.level = "rank", .preceding = {"ACT-1"},   .following = {"REFpb"}, .latency = V("nPBR2ACT")},  
           {.level = "rank", .preceding = {"REFpb"}, .following = {"REFpb"}, .latency = V("nPBR2PBR")},  
 
           /*** Same Bank Group ***/ 
@@ -482,51 +400,36 @@ class AgentXNDP : public IDRAM, public Implementation {
       m_actions.resize(m_levels.size(), std::vector<ActionFunc_t<Node>>(m_commands.size()));
 
       // Rank Actions
-      m_actions[m_levels["rank"]][m_commands["PREA"]] = Lambdas::Action::Rank::PREab<AgentXNDP>;
-      m_actions[m_levels["rank"]][m_commands["CASRD"]] = [this] (Node* node, int cmd, int target_id, Clk_t clk) {
-        node->m_final_synced_cycle = clk + m_timing_vals("nCL") + m_timing_vals("nBL16") + 1; 
+      m_actions[m_levels["rank"]][m_commands["PREA"]] = Lambdas::Action::Rank::PREab<LPDDR5>;
+      m_actions[m_levels["rank"]][m_commands["CASRD"]] = [] (Node* node, int cmd, int target_id, Clk_t clk) {
+        node->m_final_synced_cycle = clk + m_timings["nCL"] + m_timings["nBL16"] + 1; 
       };
-      m_actions[m_levels["rank"]][m_commands["CASWR"]] = [this] (Node* node, int cmd, int target_id, Clk_t clk) {
-        node->m_final_synced_cycle = clk + m_timing_vals("nCWL") + m_timing_vals("nBL16") + 1; 
+      m_actions[m_levels["rank"]][m_commands["CASWR"]] = [] (Node* node, int cmd, int target_id, Clk_t clk) {
+        node->m_final_synced_cycle = clk + m_timings["nCWL"] + m_timings["nBL16"] + 1; 
       };
-      m_actions[m_levels["rank"]][m_commands["RD16"]] = [this] (Node* node, int cmd, int target_id, Clk_t clk) {
-        node->m_final_synced_cycle = clk + m_timing_vals("nCL") + m_timing_vals("nBL16"); 
+      m_actions[m_levels["rank"]][m_commands["RD16"]] = [] (Node* node, int cmd, int target_id, Clk_t clk) {
+        node->m_final_synced_cycle = clk + m_timings["nCL"] + m_timings["nBL16"]; 
       };
-      m_actions[m_levels["rank"]][m_commands["WR16"]] = [this] (Node* node, int cmd, int target_id, Clk_t clk) {
-        node->m_final_synced_cycle = clk + m_timing_vals("nCWL") + m_timing_vals("nBL16"); 
+      m_actions[m_levels["rank"]][m_commands["WR16"]] = [] (Node* node, int cmd, int target_id, Clk_t clk) {
+        node->m_final_synced_cycle = clk + m_timings["nCWL"] + m_timings["nBL16"]; 
       };
       // Bank actions
       m_actions[m_levels["bank"]][m_commands["ACT-1"]] = [] (Node* node, int cmd, int target_id, Clk_t clk) {
         node->m_state = m_states["Pre-Opened"];
         node->m_row_state[target_id] = m_states["Pre-Opened"];
       };
-      m_actions[m_levels["bank"]][m_commands["ACT-2"]] = Lambdas::Action::Bank::ACT<AgentXNDP>;
-      m_actions[m_levels["bank"]][m_commands["PRE"]]   = Lambdas::Action::Bank::PRE<AgentXNDP>;
-      m_actions[m_levels["bank"]][m_commands["RD16A"]] = Lambdas::Action::Bank::PRE<AgentXNDP>;
-      m_actions[m_levels["bank"]][m_commands["WR16A"]] = Lambdas::Action::Bank::PRE<AgentXNDP>;
-      // PIM: ACTAB act all bank in rank
-      m_actions[m_levels["bank"]][m_commands["ACTAB"]] = [] (Node* node, int cmd, int target_id, Clk_t clk) {
-          // bank -> bg -> rank -> channel
-          Node* channel = node->m_parent_node->m_parent_node->m_parent_node;
-
-          for (auto rank : channel->m_child_nodes) {
-            for (auto bg : rank->m_child_nodes) {
-              for (auto bank : bg->m_child_nodes) {
-                bank->m_state = m_states["Opened"];
-                bank->m_row_state.clear();
-                bank->m_row_state[target_id] = m_states["Opened"];
-              }
-            }
-          }
-        };
+      m_actions[m_levels["bank"]][m_commands["ACT-2"]] = Lambdas::Action::Bank::ACT<LPDDR5>;
+      m_actions[m_levels["bank"]][m_commands["PRE"]]   = Lambdas::Action::Bank::PRE<LPDDR5>;
+      m_actions[m_levels["bank"]][m_commands["RD16A"]] = Lambdas::Action::Bank::PRE<LPDDR5>;
+      m_actions[m_levels["bank"]][m_commands["WR16A"]] = Lambdas::Action::Bank::PRE<LPDDR5>;
     };
 
     void set_preqs() {
       m_preqs.resize(m_levels.size(), std::vector<PreqFunc_t<Node>>(m_commands.size()));
 
       // Rank Preqs
-      m_preqs[m_levels["rank"]][m_commands["REFab"]] = Lambdas::Preq::Rank::RequireAllBanksClosed<AgentXNDP>;
-      m_preqs[m_levels["rank"]][m_commands["RFMab"]] = Lambdas::Preq::Rank::RequireAllBanksClosed<AgentXNDP>;
+      m_preqs[m_levels["rank"]][m_commands["REFab"]] = Lambdas::Preq::Rank::RequireAllBanksClosed<LPDDR5>;
+      m_preqs[m_levels["rank"]][m_commands["RFMab"]] = Lambdas::Preq::Rank::RequireAllBanksClosed<LPDDR5>;
 
       m_preqs[m_levels["rank"]][m_commands["REFpb"]] = [this] (Node* node, int cmd, int target_id, Clk_t clk) {
         int target_bank_id = target_id;
@@ -595,113 +498,21 @@ class AgentXNDP : public IDRAM, public Implementation {
           } 
         }
       };
-      
-      // ================= Bank Preqs：PIM MACAB / WRAB（All-bank on channel）=================
-
-      m_preqs[m_levels["bank"]][m_commands["MACAB"]] = [] (Node* node, int cmd, int target_id, Clk_t clk) {
-        // bank -> bg -> rank -> channel
-        Node* channel = node->m_parent_node->m_parent_node->m_parent_node;
-
-        bool need_prea  = false;  
-        bool need_actab = false;  
-
-        for (auto rank : channel->m_child_nodes) {
-          for (auto bg : rank->m_child_nodes) {
-            for (auto bank : bg->m_child_nodes) {
-
-              if (bank->m_state == m_states["Closed"]) {
-                need_actab = true;
-              }
-              else if (bank->m_state == m_states["Pre-Opened"]) {
-                need_prea = true;
-              }
-              else if (bank->m_state == m_states["Opened"]) {
-                if (bank->m_row_state.find(target_id) == bank->m_row_state.end()) {
-                  need_prea = true;
-                }
-              }
-              else {
-                spdlog::error("[Preq::Bank] Invalid bank state for a PIM MACAB command!");
-                std::exit(-1);
-              }
-
-              if (need_prea) break; 
-            }
-            if (need_prea) break;
-          }
-          if (need_prea) break;
-        }
-
-        if (need_prea) {
-          return m_commands["PREA"];
-        } else if (need_actab) {
-          return m_commands["ACTAB"];
-        } else {
-          return cmd;
-        }
-      };
-
-      m_preqs[m_levels["bank"]][m_commands["WRAB"]] = [] (Node* node, int cmd, int target_id, Clk_t clk) {
-        Node* channel = node->m_parent_node->m_parent_node->m_parent_node;
-
-        bool need_prea  = false;
-        bool need_actab = false;
-
-        for (auto rank : channel->m_child_nodes) {
-          for (auto bg : rank->m_child_nodes) {
-            for (auto bank : bg->m_child_nodes) {
-
-              if (bank->m_state == m_states["Closed"]) {
-                need_actab = true;
-              }
-              else if (bank->m_state == m_states["Pre-Opened"]) {
-                need_prea = true;
-              }
-              else if (bank->m_state == m_states["Opened"]) {
-                if (bank->m_row_state.find(target_id) == bank->m_row_state.end()) {
-                  need_prea = true;
-                }
-              }
-              else {
-                spdlog::error("[Preq::Bank] Invalid bank state for a PIM WRAB command!");
-                std::exit(-1);
-              }
-
-              if (need_prea) break;
-            }
-            if (need_prea) break;
-          }
-          if (need_prea) break;
-        }
-
-        if (need_prea) {
-          return m_commands["PREA"];
-        } else if (need_actab) {
-          return m_commands["ACTAB"];
-        } else {
-          return cmd;
-        }
-      };
-
     };
 
     void set_rowhits() {
       m_rowhits.resize(m_levels.size(), std::vector<RowhitFunc_t<Node>>(m_commands.size()));
 
-      m_rowhits[m_levels["bank"]][m_commands["RD16"]] = Lambdas::RowHit::Bank::RDWR<AgentXNDP>;
-      m_rowhits[m_levels["bank"]][m_commands["WR16"]] = Lambdas::RowHit::Bank::RDWR<AgentXNDP>;
-      m_rowhits[m_levels["bank"]][m_commands["MACAB"]] = Lambdas::RowHit::Bank::RDWR<AgentXNDP>;
-      m_rowhits[m_levels["bank"]][m_commands["WRAB"]] = Lambdas::RowHit::Bank::RDWR<AgentXNDP>;
+      m_rowhits[m_levels["bank"]][m_commands["RD16"]] = Lambdas::RowHit::Bank::RDWR<LPDDR5>;
+      m_rowhits[m_levels["bank"]][m_commands["WR16"]] = Lambdas::RowHit::Bank::RDWR<LPDDR5>;
     }
 
 
     void set_rowopens() {
-      m_rowopens.resize(m_levels.size(), std::vector<RowopenFunc_t<Node>>(m_commands.size()));
+      m_rowopens.resize(m_levels.size(), std::vector<RowhitFunc_t<Node>>(m_commands.size()));
 
-      m_rowopens[m_levels["bank"]][m_commands["RD16"]] = Lambdas::RowOpen::Bank::RDWR<AgentXNDP>;
-      m_rowopens[m_levels["bank"]][m_commands["WR16"]] = Lambdas::RowOpen::Bank::RDWR<AgentXNDP>;
-      m_rowopens[m_levels["bank"]][m_commands["MACAB"]] = Lambdas::RowOpen::Bank::RDWR<AgentXNDP>;
-      m_rowopens[m_levels["bank"]][m_commands["WRAB"]] = Lambdas::RowOpen::Bank::RDWR<AgentXNDP>;
+      m_rowopens[m_levels["bank"]][m_commands["RD16"]] = Lambdas::RowOpen::Bank::RDWR<LPDDR5>;
+      m_rowopens[m_levels["bank"]][m_commands["WR16"]] = Lambdas::RowOpen::Bank::RDWR<LPDDR5>;
     }
 
 
