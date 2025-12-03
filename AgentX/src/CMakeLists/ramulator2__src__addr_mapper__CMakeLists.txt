@@ -5,6 +5,7 @@ target_sources(
   addr_mapper.h 
 
   impl/AgentX_NDP_linear_mappers.cpp
+  impl/LPDDR5_linear_mappers.cpp
 )
 
 target_link_libraries(

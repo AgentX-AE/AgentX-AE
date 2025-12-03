@@ -5,6 +5,7 @@ target_sources(
   memory_system.h
 
   impl/AgentX_NDP_system.cpp
+  impl/LPDDR5_system.cpp
 )
 
 target_link_libraries(
